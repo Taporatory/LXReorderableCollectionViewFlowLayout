@@ -51,7 +51,7 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
 
 - (UIView *)LX_snapshotView {
     if ([self respondsToSelector:@selector(snapshotViewAfterScreenUpdates:)]) {
-        return [self snapshotViewAfterScreenUpdates:YES];
+        return [self snapshotViewAfterScreenUpdates:NO];
     } else {
         UIGraphicsBeginImageContextWithOptions(self.bounds.size, self.isOpaque, 0.0f);
         [self.layer renderInContext:UIGraphicsGetCurrentContext()];
@@ -318,25 +318,28 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
             UICollectionViewCell *collectionViewCell = [self.collectionView cellForItemAtIndexPath:self.selectedItemIndexPath];
             
             self.currentView = [[UIView alloc] initWithFrame:collectionViewCell.frame];
+            self.currentView.alpha = 0.96;
             
-            collectionViewCell.highlighted = YES;
-            UIView *highlightedImageView = [collectionViewCell LX_snapshotView];
-            highlightedImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            highlightedImageView.alpha = 1.0f;
+//            collectionViewCell.highlighted = YES;
+//            UIView *highlightedImageView = [collectionViewCell LX_snapshotView];
+////            highlightedImageView.backgroundColor = [UIColor yellowColor];
+//            highlightedImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+//            highlightedImageView.alpha = 1.0f;
             
-            collectionViewCell.highlighted = NO;
+//            collectionViewCell.highlighted = NO;
             UIView *imageView = [collectionViewCell LX_snapshotView];
+//            imageView.backgroundColor = [UIColor orangeColor];
             imageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            imageView.alpha = 0.0f;
+//            imageView.alpha = 0.0f;
             
             [self.currentView addSubview:imageView];
-            [self.currentView addSubview:highlightedImageView];
+//            [self.currentView addSubview:highlightedImageView];
             [self.collectionView addSubview:self.currentView];
             
             self.currentViewCenter = self.currentView.center;
             
-            if ([self.delegate respondsToSelector:@selector(collectionView:layout:didBeginDraggingItemAtIndexPath:)]) {
-                  [self.delegate collectionView:self.collectionView layout:self didBeginDraggingItemAtIndexPath:self.selectedItemIndexPath];
+            if ([self.delegate respondsToSelector:@selector(collectionView:layout:didBeginDraggingItemAtIndexPath:draggingView:)]) {
+                  [self.delegate collectionView:self.collectionView layout:self didBeginDraggingItemAtIndexPath:self.selectedItemIndexPath draggingView:self.currentView];
             }
         
             __weak typeof(self) weakSelf = self;
@@ -348,26 +351,29 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
                  __strong typeof(self) strongSelf = weakSelf;
                  if (strongSelf) {
                      strongSelf.currentView.transform = CGAffineTransformMakeScale(1.1f, 1.1f);
-                     highlightedImageView.alpha = 0.0f;
-                     imageView.alpha = 1.0f;
+//                     collectionViewCell.transform = CGAffineTransformMakeScale(1.1f, 1.1f);
+//                     highlightedImageView.alpha = 0.0f;
+//                     imageView.alpha = 1.0f;
                  }
              }
              completion:^(BOOL finished) {
                  __strong typeof(self) strongSelf = weakSelf;
                  if (strongSelf) {
-                     [highlightedImageView removeFromSuperview];
+//                     [self.collectionView bringSubviewToFront:strongSelf.currentView];
+//                     [highlightedImageView removeFromSuperview];
                  }
              }];
             
             [self invalidateLayout];
+            
         } break;
         case UIGestureRecognizerStateCancelled:
         case UIGestureRecognizerStateEnded: {
             NSIndexPath *currentIndexPath = self.selectedItemIndexPath;
             
             if (currentIndexPath) {
-                if ([self.delegate respondsToSelector:@selector(collectionView:layout:willEndDraggingItemAtIndexPath:)]) {
-                    [self.delegate collectionView:self.collectionView layout:self willEndDraggingItemAtIndexPath:currentIndexPath];
+                if ([self.delegate respondsToSelector:@selector(collectionView:layout:willEndDraggingItemAtIndexPath:draggingView:)]) {
+                    [self.delegate collectionView:self.collectionView layout:self willEndDraggingItemAtIndexPath:currentIndexPath draggingView:self.currentView];
                 }
                 
                 self.selectedItemIndexPath = nil;
@@ -399,8 +405,8 @@ static NSString * const kLXCollectionViewKeyPath = @"collectionView";
                          strongSelf.currentView = nil;
                          [strongSelf invalidateLayout];
                          
-                         if ([strongSelf.delegate respondsToSelector:@selector(collectionView:layout:didEndDraggingItemAtIndexPath:)]) {
-                             [strongSelf.delegate collectionView:strongSelf.collectionView layout:strongSelf didEndDraggingItemAtIndexPath:currentIndexPath];
+                         if ([strongSelf.delegate respondsToSelector:@selector(collectionView:layout:didEndDraggingItemAtIndexPath:draggingView:)]) {
+                             [strongSelf.delegate collectionView:strongSelf.collectionView layout:strongSelf didEndDraggingItemAtIndexPath:currentIndexPath draggingView:self.currentView];
                          }
                      }
                  }];
